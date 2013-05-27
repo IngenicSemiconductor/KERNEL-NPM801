@@ -804,7 +804,7 @@ static inline int multiblock_erase(void *ppartition,BlockList * erase_blocklist)
 {
 	int ret;
 	PPartition * tmp_ppt = (PPartition *)ppartition;
-        printk("+++bl->startBlock = %d\n", erase_blocklist->startBlock);
+        /* printk("+++bl->startBlock = %d\n", erase_blocklist->startBlock); */
 	//	struct platform_nand_partition * tmp_pf = (struct platform_nand_partition *)tmp_ppt->prData;
 	//	unsigned char tmp_part_attrib = tmp_pf->part_attrib;
 	if(!erase_blocklist){
@@ -814,7 +814,7 @@ static inline int multiblock_erase(void *ppartition,BlockList * erase_blocklist)
 	nand_ops_parameter_reset(tmp_ppt);
 	ret =nand_erase_blocks(g_pnand_api.vnand_base,erase_blocklist);
 	g_pnand_api.nand_dma->cache_phypageid = -1;
-        printk("---OK\n", erase_blocklist->startBlock);
+        /* printk("---OK\n", erase_blocklist->startBlock); */
 	return ret;
 }
 

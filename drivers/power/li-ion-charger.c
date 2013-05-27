@@ -133,7 +133,7 @@ static int li_ion_get_property(struct power_supply *psy,
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_ONLINE:
-		val->intval = li_ion->online;
+            val->intval = (li_ion->status == POWER_SUPPLY_STATUS_CHARGING) ? 1 : 0;
 		break;
 	default:
 		return -EINVAL;
@@ -146,13 +146,17 @@ static void li_ion_external_power_changed(struct power_supply *psy)
 {
 	struct li_ion_charger *li_ion = psy_to_li_ion(psy);
 
-	if (li_ion->status == POWER_SUPPLY_STATUS_FULL && !is_ac_online()) {
-		pr_info("li_ion: ac offline: FULL -> NOT_CHARGING\n");
-		li_ion->status = POWER_SUPPLY_STATUS_NOT_CHARGING;
-		update_battery(li_ion, li_ion->status);//
-		power_supply_changed(&li_ion->charger);
-	} else
-		pr_info("li_ion: ac changed (skip)\n");
+	if (!is_ac_online()) {
+            pr_info("li_ion: ac offline: NOCHARGING\n");
+            li_ion->status = POWER_SUPPLY_STATUS_NOT_CHARGING;
+            update_battery(li_ion, li_ion->status);
+            power_supply_changed(&li_ion->charger);
+        } else {
+            pr_info("li_ion: ac online: CHARGING\n");
+            li_ion->status = POWER_SUPPLY_STATUS_CHARGING;
+            update_battery(li_ion, li_ion->status);
+            power_supply_changed(&li_ion->charger);
+        }
 
 }
 
