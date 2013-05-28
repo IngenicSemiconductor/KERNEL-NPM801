@@ -39,6 +39,7 @@ obj-$(CONFIG_CHARGER_MAX8903)	+= max8903_charger.o
 obj-$(CONFIG_CHARGER_TWL4030)	+= twl4030_charger.o
 obj-$(CONFIG_CHARGER_GPIO)	+= gpio-charger.o
 obj-$(CONFIG_CHARGER_LI_ION)	+= li-ion-charger.o
+obj-$(CONFIG_CHARGER_AC)	+= ac-charger.o
 
 obj-$(CONFIG_CHARGER_ACT8600)	+= act8600-charger.o
 obj-$(CONFIG_BATTERY_RICOH618)	+= ricoh618-battery.o

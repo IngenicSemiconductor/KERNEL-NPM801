@@ -280,4 +280,8 @@ config CHARGER_LI_ION
 	tristate "JZ4780 Li-ion charger"
 	depends on GPIOLIB
 
+config CHARGER_AC
+	tristate "JZ4780 AC charger"
+	depends on GPIOLIB
+
 endif # POWER_SUPPLY

@@ -12,7 +12,7 @@
 #include <linux/gpio_keys.h>
 #include <linux/input.h>
 #include <linux/power/gpio-charger.h>
-#include <linux/power/li-ion-charger.h>
+#include <linux/power/ac-charger.h>
 #include <linux/power/jz4780-battery.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
@@ -139,35 +139,25 @@ static struct jz_battery_platform_data npm801_battery_pdata = {
 
 /* ac charger */
 static char *npm801_ac_supplied_to[] = {
-	"li_ion_charge",
+        "battery",
 };
 
-static struct gpio_charger_platform_data npm801_ac_charger_pdata = {
+
+static struct ac_charger_platform_data npm801_ac_charger_pdata = {
 	.name = "ac",
 	.type = POWER_SUPPLY_TYPE_MAINS,
-	.gpio = GPIO_PA(16),
-	.gpio_active_low = 0,
+	.gpio_ac = GPIO_PA(16),
+	.gpio_ac_active_low = 0,
+	.gpio_charging = GPIO_PB(3),
+	.gpio_charging_active_low = 1,
 	.supplied_to = npm801_ac_supplied_to,
 	.num_supplicants = ARRAY_SIZE(npm801_ac_supplied_to),
 };
 
 static struct platform_device npm801_ac_charger_device = {
-	.name = "gpio-charger",
+        .name = "ac-charger",
 	.dev = {
 		.platform_data = &npm801_ac_charger_pdata,
-	},
-};
-
-/* li-ion charger */
-static struct li_ion_charger_platform_data npm801_li_ion_charger_pdata = {
-	.gpio = GPIO_PB(3),
-	.gpio_active_low = 1,
-};
-
-static struct platform_device npm801_li_ion_charger_device = {
-	.name = "li-ion-charger",
-	.dev = {
-		.platform_data = &npm801_li_ion_charger_pdata,
 	},
 };
 
@@ -364,8 +354,6 @@ static int __init npm801_board_init(void)
 
 /* ac charger */
 	platform_device_register(&npm801_ac_charger_device);
-/* li-ion charger */
-	platform_device_register(&npm801_li_ion_charger_device);
 
 /* uart */
 #ifdef CONFIG_SERIAL_JZ47XX_UART0
