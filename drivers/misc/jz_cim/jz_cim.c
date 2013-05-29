@@ -126,6 +126,7 @@ struct jz_cim {
 	//CameraYUVMeta p_yuv_meta_data[PDESC_NR];
 	CameraYUVMeta c_yuv_meta_data[CDESC_NR];
 	int is_clock_enabled;
+	int is_mclk_enabled;
 };
 
 static unsigned int right_num = 0;
@@ -245,6 +246,31 @@ static inline void cim_set_da(struct jz_cim *cim,void * addr)
 	printk("__%s__\n", __func__);
 
 	reg_write(cim,CIM_DA,(unsigned long)addr);
+}
+
+static inline bool cim_get_and_check_cmd(struct jz_cim *cim)
+{
+	unsigned long cmd_len, tmp;
+	int time_out = 0;
+	bool ret;
+
+	while(1) {
+		cmd_len = reg_read(cim,CIM_CMD);
+		cmd_len &= 0xffffff;
+		mdelay(1);
+		tmp = reg_read(cim,CIM_CMD);
+		tmp &= 0xffffff;
+		if(tmp == cmd_len) {
+			ret = true;
+			break;
+		}
+		if(100 == (++time_out)) {
+			ret = false;
+			break;
+		}
+	}
+
+	return ret;
 }
 
 static inline unsigned long cim_get_iid(struct jz_cim *cim)
@@ -397,6 +423,22 @@ static void cim_dump_reg(struct jz_cim *cim)
     printk("-----------------------------------------------------\n");
 }
 
+static inline void cim_enable_mclk(struct jz_cim *cim)
+{
+	if(!cim->is_mclk_enabled) {
+		clk_enable(cim->mclk);
+		cim->is_mclk_enabled = 1;
+	}
+}
+
+static inline void cim_disable_mclk(struct jz_cim *cim)
+{
+	if(cim->is_mclk_enabled) {
+		clk_disable(cim->mclk);
+		cim->is_mclk_enabled = 0;
+	}
+}
+
 void cim_power_on(struct jz_cim *cim)
 {
 	if(!cim->is_clock_enabled) {
@@ -412,6 +454,7 @@ void cim_power_on(struct jz_cim *cim)
                     clk_enable(cim->mclk);
 		}
 		cim->is_clock_enabled = 1;
+		cim->is_mclk_enabled = 1;
 	}
 		
 	if(cim->power) {
@@ -431,7 +474,7 @@ void cim_power_off(struct jz_cim *cim)
 			clk_disable(cim->clk);
 		
 		if(cim->mclk)
-			clk_disable(cim->mclk);
+			cim_disable_mclk(cim);
 		cim->is_clock_enabled = 0;
 	}
 	
@@ -670,7 +713,7 @@ static irqreturn_t cim_irq_handler(int irq, void *data)
 	    || (state_reg & CIM_STATE_CB_RXF_OF)
 	    || (state_reg & CIM_STATE_CR_RXF_OF)
 	    ){
-            dev_err(cim->dev," -------irq_count=%d Rx FIFO OverFlow interrupt! \tstate_reg= %#x\n", irq_count, state_reg);
+            dev_err(cim->dev," -------irq_count=%d Rx FIFO OverFlow interrupt! \tstate_reg= %#lx\n", irq_count, state_reg);
             //printk("bit_clr CIM_STATE_RXF_OF\n");
             //bit_clr(cim,CIM_STATE,CIM_STATE_RXF_OF|CIM_STATE_Y_RXF_OF|CIM_STATE_CB_RXF_OF|CIM_STATE_CR_RXF_OF);
             cim_disable(cim);
@@ -772,9 +815,12 @@ static long cim_shutdown(struct jz_cim *cim)
 		return 0;
 	cim->state = CS_IDLE;
 	dev_dbg(cim->dev," -----cim shut down\n");
+	cim_disable_mclk(cim);
+	if(!cim_get_and_check_cmd(cim))
+		dev_err(cim->dev," -----cim disable mclk timeout !\n");
 	cim_disable(cim);
 	cim_disable_dma(cim);
-	
+	cim_enable_mclk(cim);
 	cim_reset(cim);
 	cim_clear_state(cim);	// clear state register
 	cim_clear_rfifo(cim);	// resetting rxfifo
