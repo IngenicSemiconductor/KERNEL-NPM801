@@ -12,16 +12,16 @@
 
 static struct frm_size ov7675_capture_table[]= {
 	{640,480},
-	{352,288},
-	{320,240},
-	{176,144},
+	/* {352,288}, */
+	/* {320,240}, */
+	/* {176,144}, */
 };
 
 static struct frm_size ov7675_preview_table[]= {
 	{640,480},
-	{352,288},
-	{320,240},
-	{176,144},
+	/* {352,288}, */
+	/* {320,240}, */
+	/* {176,144}, */
 };
 
 static inline int sensor_i2c_master_send(struct i2c_client *client,const char *buf ,int count)
