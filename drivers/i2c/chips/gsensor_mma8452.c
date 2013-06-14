@@ -308,12 +308,14 @@ static int mma8452_device_power_off(struct mma8452_data *mma)
 		printk("POWER OFF ERROR\n");
 		return result;
 	}
-	if (mma->power && atomic_cmpxchg(&mma->regulator_enabled, 1, 0)){
-		result = regulator_disable(mma->power);
-		if (result < 0){
-			dev_err(&mma->client->dev,
-					"power_off regulator failed: %d\n", result);
-			return result;
+	if (!IS_ERR(mma->power) && atomic_cmpxchg(&mma->regulator_enabled, 1, 0)){
+		if (regulator_is_enabled(mma->power)) {
+			result = regulator_disable(mma->power);
+			if (result < 0){
+				dev_err(&mma->client->dev,
+						"power_off regulator failed: %d\n", result);
+				return result;
+			}
 		}
 	}
 	return 0;
@@ -323,12 +325,14 @@ static int mma8452_device_power_on(struct mma8452_data *mma)
 {
 	int result;
 	u8 buf[3] = {0,0,0};
-	if (mma->power && (atomic_cmpxchg(&mma->regulator_enabled, 0, 1) == 0)){
-		result = regulator_enable(mma->power);
-		if (result < 0){
-			dev_err(&mma->client->dev,
-					"power_off regulator failed: %d\n", result);
-			return result;
+	if (!IS_ERR(mma->power) && (atomic_cmpxchg(&mma->regulator_enabled, 0, 1) == 0)){
+		if (!regulator_is_enabled(mma->power)) {
+			result = regulator_enable(mma->power);
+			if (result < 0){
+				dev_err(&mma->client->dev,
+						"power_off regulator failed: %d\n", result);
+				return result;
+			}
 		}
 	}
 	udelay(100);
@@ -346,6 +350,29 @@ static int mma8452_device_power_on(struct mma8452_data *mma)
 		printk("POWER ON ERROR\n");
 		return result;
 	}
+	return 0;
+}
+
+static int mma8452_reset(struct mma8452_data *mma)
+{
+	int err = 0;
+
+	err = mma8452_device_power_off(mma);
+	if (err) {
+		dev_err(&mma->client->dev,
+				"reset failed: %d\n", err);
+		return err;
+	}
+	mdelay(2);
+	err = mma8452_device_power_on(mma);
+	if (err) {
+		dev_err(&mma->client->dev,
+				"reset failed: %d\n", err);
+		return err;
+	}
+	mdelay(2);
+	atomic_set(&mma->enabled,1);
+
 	return 0;
 }
 
@@ -550,19 +577,21 @@ static int __devinit mma8452_probe(struct i2c_client *client,
 
 	client->dev.init_name=client->name;
 	mma->power = regulator_get(&client->dev, "vgsensor");
-	if (IS_ERR(mma->power)) {
+	if (!IS_ERR(mma->power)){
+		if (!regulator_is_enabled(mma->power)) {
+			result = regulator_enable(mma->power);
+			if (result < 0){
+				dev_err(&mma->client->dev,
+						"power_on regulator failed: %d\n", result);
+				goto err1;
+			}
+			atomic_set(&mma->regulator_enabled, 1);
+		}
+	} else {
 		dev_warn(&client->dev, "get regulator failed\n");
 	}
-	if (mma->power){
-		result = regulator_enable(mma->power);
-		if (result < 0){
-			dev_err(&mma->client->dev,
-					"power_on regulator failed: %d\n", result);
-			goto err1;
-		}
-		atomic_set(&mma->regulator_enabled, 1);
-	}
 	udelay(10);
+	mma8452_reset(mma);
 
         /*--read id must add to load mma8452 or lis3dh--*/
         printk(KERN_INFO "check mma8452 chip ID\n");
@@ -578,11 +607,6 @@ static int __devinit mma8452_probe(struct i2c_client *client,
 		dev_err(&client->dev, "no irq pin available\n");
 		mma->pdata->gpio_int = -EBUSY;
 	}
-	mma8452_device_power_off(mma);
-	udelay(100);
-	mma8452_device_power_on(mma);
-	udelay(100);
-	atomic_set(&mma->enabled,1);
 
 	i2c_set_clientdata(client,mma);
 
