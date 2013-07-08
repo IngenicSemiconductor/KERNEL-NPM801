@@ -252,7 +252,7 @@ static void mtd_panic_erase(void)
 		if (IS_ERR(file)) {
 			printk("filp_open %s is %d times in %s\n", PANIC_CHAR_PATH, erase_i, __func__);
 			erase_flag++;
-			mdelay(100);
+			msleep(100);
 			continue;
 		}
 		break;
