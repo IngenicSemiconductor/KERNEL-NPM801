@@ -34,40 +34,26 @@ static int show_cpuinfo(struct seq_file *m, void *v)
 #endif
 
 /* For Magiccode */
-	if (mc_thread->mcflags == CPU_ARM) {
-		/* for test armv7*/
-		seq_printf(m, "Processor	: ARMv7 Processor rev 2 (v7l)\n");
-		seq_printf(m, "BogoMIPS	        : 1001.88\n");
-		seq_printf(m, "Features	        : swp half thumb fastmult vfp vfpv3\n");
-		seq_printf(m, "CPU implementer	: 0x41\n");
-		seq_printf(m, "CPU architecture : 7\n");
-		seq_printf(m, "CPU variant	: 0x3\n");
-		seq_printf(m, "CPU part	        : 0xc08\n");
-		seq_printf(m, "CPU variant	: 0x3\n");
-		seq_printf(m, "CPU revision	: 2\n");
-		seq_printf(m, "Hardware	        : sun4i\n");
-		seq_printf(m, "Revision	        : 0000\n");
-		seq_printf(m, "Serial		: 0000000000000000\n");
-		seq_printf(m, "\n");
-		
-	} 
-	else if (mc_thread->mcflags == CPU_ARM_NEON){
-		/* for test armv7 neon*/
-		seq_printf(m, "Processor	: ARMv7 Processor rev 2 (v7l)\n");
-		seq_printf(m, "BogoMIPS	        : 1001.88\n");
-		seq_printf(m, "Features	        : swp half thumb fastmult vfp edsp neon vfpv3\n");
-		seq_printf(m, "CPU implementer	: 0x41\n");
-		seq_printf(m, "CPU architecture : 7\n");
-		seq_printf(m, "CPU variant	: 0x3\n");
-		seq_printf(m, "CPU part	        : 0xc08\n");
-		seq_printf(m, "CPU variant	: 0x3\n");
-		seq_printf(m, "CPU revision	: 2\n");
-		seq_printf(m, "Hardware	        : sun4i\n");
-		seq_printf(m, "Revision	        : 0000\n");
-		seq_printf(m, "Serial		: 0000000000000000\n");
-		seq_printf(m, "\n");
-		
-	} 
+        /* For Magiccode, when current process uses emulated ARM native code: */
+        if (mc_thread->mcflags != CPU_MIPS) {
+                /* mimic cpuinfo of 2012 Nexus7 with NVidia Tegra3 T30L cpu */
+                seq_printf(m, "Processor\t: ARMv7 Processor rev 9 (v7l)\n");
+                seq_printf(m, "processor\t: 0\n");
+                seq_printf(m, "BogoMIPS\t: 1001.88\n\n");
+                /* show just one processor core */
+                seq_printf(m, "Features\t: swp half thumb fastmult vfp ");
+                if (mc_thread->mcflags == CPU_ARM_NEON)
+                        seq_printf(m, "edsp neon ");
+                seq_printf(m, "vfpv3\n");
+                /* no thumbee or tls feature */
+                seq_printf(m, "CPU implementer\t: 0x41\n");  /* ARM */
+                seq_printf(m, "CPU architecture: 7\n");
+                seq_printf(m, "CPU variant\t: 0x2\n");
+                seq_printf(m, "CPU part\t: 0xc09\n");  /* Cortex-A9 */
+                seq_printf(m, "CPU revision\t: 9\n");
+                seq_printf(m, "\n");
+                return 0;
+        }
 	else {
 		
 		/*
