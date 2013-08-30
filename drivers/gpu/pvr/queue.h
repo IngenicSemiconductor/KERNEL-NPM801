@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef QUEUE_H
@@ -52,9 +51,9 @@ extern "C" {
 /*!
  * Macro to Read Offset in given command queue
  */
-#define UPDATE_QUEUE_ROFF(psQueue, ui32Size)						\
-	(psQueue)->ui32ReadOffset = ((psQueue)->ui32ReadOffset + (ui32Size))	\
-	& ((psQueue)->ui32QueueSize - 1);
+#define UPDATE_QUEUE_ROFF(psQueue, uSize)						\
+	(psQueue)->uReadOffset = ((psQueue)->uReadOffset + (uSize))	\
+	& ((psQueue)->uQueueSize - 1);
 
 /*!
 	generic cmd complete structure.
@@ -93,7 +92,7 @@ void ProcSeqShowQueue(struct seq_file *sfile,void* el);
 
 
 IMG_IMPORT
-PVRSRV_ERROR IMG_CALLCONV PVRSRVCreateCommandQueueKM(IMG_SIZE_T ui32QueueSize,
+PVRSRV_ERROR IMG_CALLCONV PVRSRVCreateCommandQueueKM(IMG_SIZE_T uQueueSize,
 													 PVRSRV_QUEUE_INFO **ppsQueueInfo);
 IMG_IMPORT
 PVRSRV_ERROR IMG_CALLCONV PVRSRVDestroyCommandQueueKM(PVRSRV_QUEUE_INFO *psQueueInfo);
@@ -113,7 +112,7 @@ PVRSRV_ERROR IMG_CALLCONV PVRSRVInsertCommandKM(PVRSRV_QUEUE_INFO	*psQueue,
 
 IMG_IMPORT
 PVRSRV_ERROR IMG_CALLCONV PVRSRVGetQueueSpaceKM(PVRSRV_QUEUE_INFO *psQueue,
-												IMG_SIZE_T ui32ParamSize,
+												IMG_SIZE_T uParamSize,
 												IMG_VOID **ppvSpace);
 
 IMG_IMPORT

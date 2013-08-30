@@ -25,6 +25,7 @@ ccflags-y += \
 	-DSUPPORT_LARGE_GENERAL_HEAP \
 	-DSYS_SUPPORTS_SGX_IDLE_CALLBACK \
 	-DPVRSRV_NEW_PVR_DPF \
+        -DPVR_ANDROID_NATIVE_WINDOW_HAS_SYNC \
 	-Idrivers/gpu/pvr/sgx
 
 ccflags-$(CONFIG_PVR_SGXCORE_540) += \
@@ -72,6 +73,7 @@ pvrsrvkm-y := \
 	proc.o \
 	pvr_bridge_k.o \
 	pvr_debug.o \
+        pvr_sync.o \
 	mm.o \
 	mutex.o \
 	event.o \

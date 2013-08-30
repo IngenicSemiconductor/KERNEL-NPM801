@@ -39,7 +39,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef _SYSCOMMON_H
@@ -117,11 +116,7 @@ typedef struct _SYS_DATA_TAG_
 	RA_ARENA					*apsLocalDevMemArena[SYS_MAX_LOCAL_DEVMEM_ARENAS]; /*!< RA Arenas for local device memory heap management */
 
     IMG_CHAR                    *pszVersionString;          /*!< Human readable string showing relevent system version info */
-#if defined (SUPPORT_SID_INTERFACE)
-	PVRSRV_EVENTOBJECT_KM		*psGlobalEventObject;		/*!< OS Global Event Object */
-#else
 	PVRSRV_EVENTOBJECT			*psGlobalEventObject;		/*!< OS Global Event Object */
-#endif
 
 	PVRSRV_MISC_INFO_CPUCACHEOP_TYPE ePendingCacheOpType;	/*!< Deferred CPU cache op control */
 

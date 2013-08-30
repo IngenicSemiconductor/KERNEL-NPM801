@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include <stddef.h> /* For the macro offsetof() */
@@ -69,11 +68,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ******************************************************************************/
 IMG_EXPORT
-#if defined (SUPPORT_SID_INTERFACE)
-PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK_KM *psCCBKick)
-#else
 PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
-#endif
 {
 	PVRSRV_ERROR eError;
 	PVRSRV_KERNEL_SYNC_INFO	*psSyncInfo;
@@ -97,6 +92,22 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 	psTACmd = CCB_DATA_FROM_OFFSET(SGXMKIF_CMDTA_SHARED, psCCBMemInfo, psCCBKick, ui32CCBOffset);
 
 	PVR_TTRACE(PVRSRV_TRACE_GROUP_KICK, PVRSRV_TRACE_CLASS_CMD_START, KICK_TOKEN_DOKICK);
+
+#if defined(TTRACE)
+	if (psCCBKick->bFirstKickOrResume)
+	{
+		PVR_TTRACE(PVRSRV_TRACE_GROUP_KICK,
+				   PVRSRV_TRACE_CLASS_FLAGS,
+				   KICK_TOKEN_FIRST_KICK);
+	}
+
+	if (psCCBKick->bLastInScene)
+	{
+		PVR_TTRACE(PVRSRV_TRACE_GROUP_KICK,
+				   PVRSRV_TRACE_CLASS_FLAGS,
+				   KICK_TOKEN_LAST_KICK);
+	}
+#endif
 	PVR_TTRACE_UI32(PVRSRV_TRACE_GROUP_KICK, PVRSRV_TRACE_CLASS_CCB,
 			KICK_TOKEN_CCB_OFFSET, psCCBKick->ui32CCBOffset);
 
@@ -307,31 +318,6 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 							 0,
 							 MAKEUNIQUETAG(psHWDstSyncListMemInfo));
 
-					if ((psSyncInfo->psSyncData->ui32LastOpDumpVal == 0) &&
-						(psSyncInfo->psSyncData->ui32LastReadOpDumpVal == 0))
-					{
-						/*
-						* Init the ROpsComplete value to 0.
-						*/
-						PDUMPCOMMENT("Init RT ROpsComplete\r\n");
-						PDUMPMEM(&psSyncInfo->psSyncData->ui32LastReadOpDumpVal,
-							psSyncInfo->psSyncDataMemInfoKM,
-							offsetof(PVRSRV_SYNC_DATA, ui32ReadOpsComplete),
-							sizeof(psSyncInfo->psSyncData->ui32ReadOpsComplete),
-							0,
-							MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-						/*
-						* Init the WOpsComplete value to 0.
-						*/
-						PDUMPCOMMENT("Init RT WOpsComplete\r\n");
-							PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
-								psSyncInfo->psSyncDataMemInfoKM,
-								offsetof(PVRSRV_SYNC_DATA, ui32WriteOpsComplete),
-								sizeof(psSyncInfo->psSyncData->ui32WriteOpsComplete),
-								0,
-								MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-					}
-
 					psSyncInfo->psSyncData->ui32LastOpDumpVal++;
 
 					ui32ModifiedValue = psSyncInfo->psSyncData->ui32LastOpDumpVal - 1;
@@ -405,31 +391,6 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 			IMG_UINT32 	ui32ModifiedValue;
 			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *) psCCBKick->ahTASrcKernelSyncInfo[i];
 
-			if ((psSyncInfo->psSyncData->ui32LastOpDumpVal == 0) &&
-				(psSyncInfo->psSyncData->ui32LastReadOpDumpVal == 0))
-			{
-				/*
-				* Init the ROpsComplete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT TA-SRC ROpsComplete\r\n", i);
-				PDUMPMEM(&psSyncInfo->psSyncData->ui32LastReadOpDumpVal,
-					psSyncInfo->psSyncDataMemInfoKM,
-					offsetof(PVRSRV_SYNC_DATA, ui32ReadOpsComplete),
-					sizeof(psSyncInfo->psSyncData->ui32ReadOpsComplete),
-					0,
-					MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-				/*
-				* Init the WOpsComplete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT TA-SRC WOpsComplete\r\n");
-					PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
-						psSyncInfo->psSyncDataMemInfoKM,
-						offsetof(PVRSRV_SYNC_DATA, ui32WriteOpsComplete),
-						sizeof(psSyncInfo->psSyncData->ui32WriteOpsComplete),
-						0,
-						MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-			}
-
 			psSyncInfo->psSyncData->ui32LastReadOpDumpVal++;
 
 			ui32ModifiedValue = psSyncInfo->psSyncData->ui32LastReadOpDumpVal - 1;
@@ -459,31 +420,6 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 		{
 			IMG_UINT32 	ui32ModifiedValue;
 			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *) psCCBKick->ahTADstKernelSyncInfo[i];
-
-			if ((psSyncInfo->psSyncData->ui32LastOpDumpVal == 0) &&
-				(psSyncInfo->psSyncData->ui32LastReadOpDumpVal == 0))
-			{
-				/*
-				 * Init the ROpsComplete value to 0.
-				 */
-				PDUMPCOMMENT("Init RT TA-DST ROpsComplete\r\n", i);
-				PDUMPMEM(&psSyncInfo->psSyncData->ui32LastReadOpDumpVal,
-					psSyncInfo->psSyncDataMemInfoKM,
-					offsetof(PVRSRV_SYNC_DATA, ui32ReadOpsComplete),
-					sizeof(psSyncInfo->psSyncData->ui32ReadOpsComplete),
-					0,
-					MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-				/*
-				 * Init the WOpsComplete value to 0.
-				 */
-				PDUMPCOMMENT("Init RT TA-DST WOpsComplete\r\n");
-					PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
-						psSyncInfo->psSyncDataMemInfoKM,
-						offsetof(PVRSRV_SYNC_DATA, ui32WriteOpsComplete),
-						sizeof(psSyncInfo->psSyncData->ui32WriteOpsComplete),
-						0,
-						MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-			}
 
 			psSyncInfo->psSyncData->ui32LastOpDumpVal++;
 
@@ -515,31 +451,6 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 			IMG_UINT32 	ui32ModifiedValue;
 			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *) psCCBKick->ah3DSrcKernelSyncInfo[i];
 
-			if ((psSyncInfo->psSyncData->ui32LastOpDumpVal == 0) &&
-				(psSyncInfo->psSyncData->ui32LastReadOpDumpVal == 0))
-			{
-				/*
-				* Init the ROpsComplete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT 3D-SRC ROpsComplete\r\n", i);
-				PDUMPMEM(&psSyncInfo->psSyncData->ui32LastReadOpDumpVal,
-					psSyncInfo->psSyncDataMemInfoKM,
-					offsetof(PVRSRV_SYNC_DATA, ui32ReadOpsComplete),
-					sizeof(psSyncInfo->psSyncData->ui32ReadOpsComplete),
-					0,
-					MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-				/*
-				* Init the WOpsComplete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT 3D-SRC WOpsComplete\r\n");
-					PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
-						psSyncInfo->psSyncDataMemInfoKM,
-						offsetof(PVRSRV_SYNC_DATA, ui32WriteOpsComplete),
-						sizeof(psSyncInfo->psSyncData->ui32WriteOpsComplete),
-						0,
-						MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-			}
-
 			psSyncInfo->psSyncData->ui32LastReadOpDumpVal++;
 
 			ui32ModifiedValue = psSyncInfo->psSyncData->ui32LastReadOpDumpVal - 1;
@@ -569,41 +480,6 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 		{
 			IMG_UINT32 	ui32ModifiedValue;
 			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *) psCCBKick->ahSrcKernelSyncInfo[i];
-
-			if ((psSyncInfo->psSyncData->ui32LastOpDumpVal == 0) &&
-				(psSyncInfo->psSyncData->ui32LastReadOpDumpVal == 0))
-			{
-				/*
-				* Init the ROpsComplete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT ROpsComplete\r\n");
-				PDUMPMEM(&psSyncInfo->psSyncData->ui32LastReadOpDumpVal,
-					psSyncInfo->psSyncDataMemInfoKM,
-					offsetof(PVRSRV_SYNC_DATA, ui32ReadOpsComplete),
-					sizeof(psSyncInfo->psSyncData->ui32ReadOpsComplete),
-					0,
-					MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-				/*
-				* Init the WOpsComplete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT WOpsComplete\r\n");
-					PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
-						psSyncInfo->psSyncDataMemInfoKM,
-						offsetof(PVRSRV_SYNC_DATA, ui32WriteOpsComplete),
-						sizeof(psSyncInfo->psSyncData->ui32WriteOpsComplete),
-						0,
-						MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-				/*
-				* Init the ROps2Complete value to 0.
-				*/
-				PDUMPCOMMENT("Init RT WOpsComplete\r\n");
-					PDUMPMEM(&psSyncInfo->psSyncData->ui32LastReadOpDumpVal,
-						psSyncInfo->psSyncDataMemInfoKM,
-						offsetof(PVRSRV_SYNC_DATA, ui32ReadOps2Complete),
-						sizeof(psSyncInfo->psSyncData->ui32ReadOps2Complete),
-						0,
-						MAKEUNIQUETAG(psSyncInfo->psSyncDataMemInfoKM));
-			}
 
 			psSyncInfo->psSyncData->ui32LastReadOpDumpVal++;
 
@@ -642,6 +518,16 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 					sizeof(IMG_UINT32),
 					0,
 					MAKEUNIQUETAG(psCCBMemInfo));
+
+			PDUMPCOMMENT("Modify TA/TQ OpPendingVal\r\n");
+
+			PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
+					psCCBMemInfo,
+					psCCBKick->ui32CCBDumpWOff + offsetof(SGXMKIF_CMDTA_SHARED, ui32TATQSyncWriteOpsPendingVal),
+					sizeof(IMG_UINT32),
+					0,
+					MAKEUNIQUETAG(psCCBMemInfo));
+
 			psSyncInfo->psSyncData->ui32LastReadOpDumpVal++;
 		}
 
@@ -657,6 +543,16 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 					sizeof(IMG_UINT32),
 					0,
 					MAKEUNIQUETAG(psCCBMemInfo));
+
+			PDUMPCOMMENT("Modify 3D/TQ OpPendingVal\r\n");
+
+			PDUMPMEM(&psSyncInfo->psSyncData->ui32LastOpDumpVal,
+					psCCBMemInfo,
+					psCCBKick->ui32CCBDumpWOff + offsetof(SGXMKIF_CMDTA_SHARED, ui323DTQSyncWriteOpsPendingVal),
+					sizeof(IMG_UINT32),
+					0,
+					MAKEUNIQUETAG(psCCBMemInfo));
+
 			psSyncInfo->psSyncData->ui32LastReadOpDumpVal++;
 		}
 
@@ -741,6 +637,24 @@ PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle, SGX_CCB_KICK *psCCBKick)
 			psSyncInfo->psSyncData->ui32ReadOpsPending--;
 		}
 #endif/* SUPPORT_SGX_GENERALISED_SYNCOBJECTS */
+
+		if (psCCBKick->hTA3DSyncInfo)
+		{
+			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *)psCCBKick->hTA3DSyncInfo;
+			psSyncInfo->psSyncData->ui32ReadOpsPending--;
+		}
+	
+		if (psCCBKick->hTASyncInfo)
+		{
+			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *)psCCBKick->hTASyncInfo;
+			psSyncInfo->psSyncData->ui32ReadOpsPending--;
+		}
+	
+		if (psCCBKick->h3DSyncInfo)
+		{
+			psSyncInfo = (PVRSRV_KERNEL_SYNC_INFO *)psCCBKick->h3DSyncInfo;
+			psSyncInfo->psSyncData->ui32ReadOpsPending--;
+		}
 
 		PVR_TTRACE(PVRSRV_TRACE_GROUP_KICK, PVRSRV_TRACE_CLASS_FUNCTION_EXIT,
 				KICK_TOKEN_DOKICK);

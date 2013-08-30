@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 */ /**************************************************************************/
 
 #include <linux/version.h>
@@ -130,6 +129,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "lock.h"
 #include "linkage.h"
 #include "buffer_manager.h"
+#if defined(PVR_ANDROID_NATIVE_WINDOW_HAS_SYNC)
+#include "pvr_sync.h"
+#endif
 
 #if defined(SUPPORT_DRI_DRM)
 #include "pvr_drm.h"
@@ -166,7 +168,6 @@ MODULE_PARM_DESC(gPVRDebugLevel, "Sets the level of debug output (default 0x7)")
 #include <linux/omap_ion.h>
 extern struct ion_device *omap_ion_device;
 struct ion_client *gpsIONClient;
-EXPORT_SYMBOL(gpsIONClient);
 #endif /* defined(CONFIG_ION_OMAP) */
 
 /* PRQA S 3207 2 */ /* ignore 'not used' warning */
@@ -215,6 +216,39 @@ IMG_UINT32 gui32ReleasePID;
 static IMG_UINT32 gPVRPowerLevel;
 #endif
 
+static int PVRSRVIONClientCreate(void)
+{
+#if defined(CONFIG_ION_OMAP)
+	gpsIONClient = ion_client_create(omap_ion_device,
+									 1 << OMAP_ION_HEAP_TYPE_TILER,
+									 "pvr");
+	if (IS_ERR_OR_NULL(gpsIONClient))
+	{
+		int err;
+
+		PVR_DPF((PVR_DBG_ERROR, "PVRSRVDriverProbe: Couldn't create ion client"));
+
+		err = PTR_ERR(gpsIONClient);
+		gpsIONClient = IMG_NULL;
+
+		return err;
+	}
+#endif /* defined(CONFIG_ION_OMAP) */
+
+	return 0;
+}
+
+static void PVRSRVIONClientDestroy(void)
+{
+#if defined(CONFIG_ION_OMAP)
+	if (gpsIONClient != NULL)
+	{
+		ion_client_destroy(gpsIONClient);
+		gpsIONClient = IMG_NULL;
+	}
+#endif
+}
+
 #if defined(PVR_LDM_MODULE)
 
 #if defined(PVR_LDM_PLATFORM_MODULE)
@@ -227,7 +261,7 @@ static IMG_UINT32 gPVRPowerLevel;
 #define	LDM_DRV	struct pci_driver
 #endif /* PVR_LDM_PCI_MODULE */
 /*
- * This is the driver interface we support.
+ * This is the driver interface we support.  
  */
 #if defined(PVR_LDM_PLATFORM_MODULE)
 static int PVRSRVDriverRemove(LDM_DEV *device);
@@ -341,7 +375,7 @@ static int __devinit PVRSRVDriverProbe(LDM_DEV *pDevice, const struct pci_device
 	{
 		return -EINVAL;
 	}
-#endif
+#endif	
 	/* SysInitialise only designed to be called once.
 	 */
 	psSysData = SysAcquireDataNoCheck();
@@ -354,19 +388,7 @@ static int __devinit PVRSRVDriverProbe(LDM_DEV *pDevice, const struct pci_device
 		}
 	}
 
-#if defined(CONFIG_ION_OMAP)
-	gpsIONClient = ion_client_create(omap_ion_device,
-									 1 << ION_HEAP_TYPE_CARVEOUT |
-									 1 << OMAP_ION_HEAP_TYPE_TILER,
-									 "pvr");
-	if (IS_ERR_OR_NULL(gpsIONClient))
-	{
-		PVR_DPF((PVR_DBG_ERROR, "PVRSRVDriverProbe: Couldn't create ion client"));
-		return PTR_ERR(gpsIONClient);
-	}
-#endif /* defined(CONFIG_ION_OMAP) */
-
-	return 0;
+	return PVRSRVIONClientCreate();
 }
 
 
@@ -400,13 +422,10 @@ static void __devexit PVRSRVDriverRemove(LDM_DEV *pDevice)
 
 	PVR_TRACE(("PVRSRVDriverRemove(pDevice=%p)", pDevice));
 
-#if defined(CONFIG_ION_OMAP)
-	ion_client_destroy(gpsIONClient);
-	gpsIONClient = IMG_NULL;
-#endif
+	PVRSRVIONClientDestroy();
 
 	SysAcquireData(&psSysData);
-
+	
 #if defined(DEBUG) && defined(PVR_MANUAL_POWER_CONTROL)
 	if (gPVRPowerLevel != 0)
 	{
@@ -453,7 +472,7 @@ static IMG_BOOL bDriverIsShutdown;
  @Description
 
  Suspend device operation for system shutdown.  This is called as part of the
- system halt/reboot process.  The driver is put into a quiescent state by
+ system halt/reboot process.  The driver is put into a quiescent state by 
  setting the power state to D3.
 
  @input pDevice - the device for which shutdown is requested
@@ -669,7 +688,7 @@ PVR_MOD_STATIC int PVRSRVDriverResume(LDM_DEV *pDevice)
  * 	echo 2 > /proc/pvr/power_control
  * To resume the device, type:
  * 	echo 0 > /proc/pvr/power_control
- *
+ * 
  * The following example shows how to suspend/resume the device independently
  * of the rest of the system.
  * Suspend the device:
@@ -718,7 +737,7 @@ IMG_INT PVRProcSetPowerLevel(struct file *file, const IMG_CHAR *buffer, IMG_UINT
 	return (count);
 }
 
-void ProcSeqShowPowerLevel(struct seq_file *sfile,void* el)
+void ProcSeqShowPowerLevel(struct seq_file *sfile,void* el)	
 {
 	seq_printf(sfile, "%lu\n", gPVRPowerLevel);
 }
@@ -782,11 +801,7 @@ static int PVRSRVOpen(struct inode unref__ * pInode, struct file *pFile)
 	if(eError != PVRSRV_OK)
 		goto err_unlock;
 
-#if defined (SUPPORT_SID_INTERFACE)
-	psPrivateData->hKernelMemInfo = 0;
-#else
 	psPrivateData->hKernelMemInfo = NULL;
-#endif
 #if defined(SUPPORT_DRI_DRM) && defined(PVR_SECURE_DRM_AUTH_EXPORT)
 	psPrivateData->psDRMFile = pFile;
 
@@ -796,7 +811,7 @@ static int PVRSRVOpen(struct inode unref__ * pInode, struct file *pFile)
 	psPrivateData->hBlockAlloc = hBlockAlloc;
 	PRIVATE_DATA(pFile) = psPrivateData;
 	iRet = 0;
-err_unlock:
+err_unlock:	
 	LinuxUnLockMutex(&gPVRSRVLock);
 	return iRet;
 }
@@ -948,6 +963,10 @@ static int __init PVRCore_Init(void)
 	struct device *psDev;
 #endif
 
+#if defined(PVR_ANDROID_NATIVE_WINDOW_HAS_SYNC)
+	PVRSyncDeviceInit();
+#endif
+
 #if !defined(SUPPORT_DRI_DRM)
 	/*
 	 * Must come before attempting to print anything via Services.
@@ -983,6 +1002,7 @@ static int __init PVRCore_Init(void)
 	}
 
 	LinuxBridgeInit();
+	
 
 	PVRMMapInit();
 
@@ -1033,6 +1053,12 @@ static int __init PVRCore_Init(void)
 		}
 #endif
 		goto init_failed;
+	}
+
+	error = PVRSRVIONClientCreate();
+	if (error != 0)
+	{
+		goto sys_deinit;
 	}
 #endif /* !defined(PVR_LDM_MODULE) */
 
@@ -1086,6 +1112,8 @@ destroy_class:
 unregister_device:
 	unregister_chrdev((IMG_UINT)AssignedMajorNumber, DEVNAME);
 #endif
+#endif
+#if !defined(PVR_LDM_MODULE) || !defined(SUPPORT_DRI_DRM)
 sys_deinit:
 #endif
 #if defined(PVR_LDM_MODULE)
@@ -1101,6 +1129,8 @@ sys_deinit:
 #endif
 
 #else	/* defined(PVR_LDM_MODULE) */
+	PVRSRVIONClientDestroy();
+
 	/* LDM drivers call SysDeinitialise during PVRSRVDriverRemove */
 	{
 		SYS_DATA *psSysData;
@@ -1129,7 +1159,7 @@ init_failed:
 
  @Function		PVRCore_Cleanup
 
- @Description
+ @Description	
 
  Remove the driver from the kernel.
 
@@ -1162,6 +1192,10 @@ static void __exit PVRCore_Cleanup(void)
 
 #if !defined(PVR_LDM_MODULE)
 	SysAcquireData(&psSysData);
+#endif
+
+#if defined(PVR_ANDROID_NATIVE_WINDOW_HAS_SYNC)
+	PVRSyncDeviceDeInit();
 #endif
 
 #if !defined(SUPPORT_DRI_DRM)
@@ -1208,6 +1242,8 @@ static void __exit PVRCore_Cleanup(void)
 		}
 	}
 #endif
+	PVRSRVIONClientDestroy();
+
 	/* LDM drivers call SysDeinitialise during PVRSRVDriverRemove */
 	(void) SysDeinitialise(psSysData);
 #endif /* defined(PVR_LDM_MODULE) */
@@ -1232,13 +1268,6 @@ static void __exit PVRCore_Cleanup(void)
  * run to start/stop the driver.
 */
 #if !defined(SUPPORT_DRI_DRM)
-
-#ifdef CONFIG_EARLY_INIT_RUN
-rootfs_initcall(PVRCore_Init);
-#else
 module_init(PVRCore_Init);
-#endif
-
 module_exit(PVRCore_Cleanup);
-
 #endif

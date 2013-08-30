@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #if !defined(__SGX_BRIDGE_KM_H__)
@@ -56,28 +55,16 @@ extern "C" {
 #endif
 
 IMG_IMPORT
-#if defined (SUPPORT_SID_INTERFACE)
-PVRSRV_ERROR SGXSubmitTransferKM(IMG_HANDLE hDevHandle, PVRSRV_TRANSFER_SGX_KICK_KM *psKick);
-#else
 PVRSRV_ERROR SGXSubmitTransferKM(IMG_HANDLE hDevHandle, PVRSRV_TRANSFER_SGX_KICK *psKick);
-#endif
 
 #if defined(SGX_FEATURE_2D_HARDWARE)
 IMG_IMPORT
-#if defined (SUPPORT_SID_INTERFACE)
-PVRSRV_ERROR SGXSubmit2DKM(IMG_HANDLE hDevHandle, PVRSRV_2D_SGX_KICK_KM *psKick);
-#else
 PVRSRV_ERROR SGXSubmit2DKM(IMG_HANDLE hDevHandle, PVRSRV_2D_SGX_KICK *psKick);
-#endif
 #endif
 
 IMG_IMPORT
 PVRSRV_ERROR SGXDoKickKM(IMG_HANDLE hDevHandle,
-#if defined (SUPPORT_SID_INTERFACE)
-						 SGX_CCB_KICK_KM *psCCBKick);
-#else
 						 SGX_CCB_KICK *psCCBKick);
-#endif
 
 IMG_IMPORT
 PVRSRV_ERROR SGXGetPhysPageAddrKM(IMG_HANDLE hDevMemHeap,
@@ -115,21 +102,12 @@ PVRSRV_ERROR SGX2DQueryBlitsCompleteKM(PVRSRV_SGXDEV_INFO		*psDevInfo,
 
 IMG_IMPORT
 PVRSRV_ERROR SGXGetInfoForSrvinitKM(IMG_HANDLE hDevHandle,
-#if defined (SUPPORT_SID_INTERFACE)
-									PVRSRV_HEAP_INFO_KM *pasHeapInfo,
-									IMG_DEV_PHYADDR *psPDDevPAddr);
-#else
 									SGX_BRIDGE_INFO_FOR_SRVINIT *psInitInfo);
-#endif
 
 IMG_IMPORT
 PVRSRV_ERROR DevInitSGXPart2KM(PVRSRV_PER_PROCESS_DATA *psPerProc,
 							   IMG_HANDLE hDevHandle,
-#if defined (SUPPORT_SID_INTERFACE)
-							   SGX_BRIDGE_INIT_INFO_KM *psInitInfo);
-#else
 							   SGX_BRIDGE_INIT_INFO *psInitInfo);
-#endif
 
 /*!
  * *****************************************************************************
@@ -263,11 +241,7 @@ SGXAddSharedPBDescKM(PVRSRV_PER_PROCESS_DATA	*psPerProc,
  ********************************************************************************/
 IMG_IMPORT PVRSRV_ERROR
 SGXGetInternalDevInfoKM(IMG_HANDLE hDevCookie,
-#if defined (SUPPORT_SID_INTERFACE)
-						SGX_INTERNAL_DEVINFO_KM *psSGXInternalDevInfo);
-#else
 						SGX_INTERNAL_DEVINFO *psSGXInternalDevInfo);
-#endif
 
 #if defined (__cplusplus)
 }

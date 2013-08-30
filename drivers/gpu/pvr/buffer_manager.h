@@ -39,7 +39,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef _BUFFER_MANAGER_H_
@@ -336,8 +335,8 @@ BM_Alloc (IMG_HANDLE			hDevMemHeap,
  */
 IMG_BOOL
 BM_Wrap (	IMG_HANDLE hDevMemHeap,
-		    IMG_SIZE_T ui32Size,
-			IMG_SIZE_T ui32Offset,
+		    IMG_SIZE_T uSize,
+			IMG_SIZE_T uOffset,
 			IMG_BOOL bPhysContig,
 			IMG_SYS_PHYADDR *psSysAddr,
 			IMG_VOID *pvCPUVAddr,
@@ -608,6 +607,7 @@ IMG_VOID _BM_XProcIndexReleaseDebug(const IMG_CHAR *pszFile, IMG_INT iLine, IMG_
 #else
 IMG_VOID _BM_XProcIndexAcquire(IMG_UINT32 ui32Index);
 IMG_VOID _BM_XProcIndexRelease(IMG_UINT32 ui32Index);
+
 
 #define BM_XProcIndexAcquire(x) \
 	_BM_XProcIndexAcquire( x)

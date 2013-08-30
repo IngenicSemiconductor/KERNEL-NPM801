@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #ifndef _PDUMP_KM_H_
 #define _PDUMP_KM_H_
@@ -77,6 +76,8 @@ extern IMG_UINT32 g_ui32EveryLineCounter;
 #ifndef PDUMP
 #define MAKEUNIQUETAG(hMemInfo)	(0)
 #endif
+
+IMG_BOOL _PDumpIsProcessActive(IMG_VOID);
 
 #ifdef PDUMP
 
@@ -268,8 +269,8 @@ extern IMG_UINT32 g_ui32EveryLineCounter;
 								  IMG_HANDLE				hOSMemHandle,
 								  IMG_UINT32				ui32NumBytes,
 								  IMG_UINT32				ui32PageSize,
-		                          IMG_BOOL			  		bShared,
-								  IMG_HANDLE				hUniqueTag);
+								  IMG_HANDLE				hUniqueTag,
+								  IMG_UINT32				ui32Flags);
 	PVRSRV_ERROR PDumpMallocPageTable(PVRSRV_DEVICE_IDENTIFIER	*psDevId,
 									  IMG_HANDLE            hOSMemHandle,
 									  IMG_UINT32            ui32Offset,
@@ -283,7 +284,8 @@ extern IMG_UINT32 g_ui32EveryLineCounter;
 							IMG_UINT32			ui32PageSize,
 							IMG_HANDLE      	hUniqueTag,
 							IMG_BOOL			bInterleaved,
-							IMG_BOOL			bSparse);
+							IMG_BOOL			bSparse,
+							IMG_UINT32			ui32Flags);
 	PVRSRV_ERROR PDumpFreePageTable(PVRSRV_DEVICE_IDENTIFIER *psDevID,
 									IMG_HANDLE          hOSMemHandle,
 									IMG_CPU_VIRTADDR	pvLinAddr,

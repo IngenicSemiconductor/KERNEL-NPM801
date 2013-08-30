@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #ifndef __SGXINFOKM_H__
 #define __SGXINFOKM_H__
@@ -150,12 +149,6 @@ typedef struct _PVRSRV_SGXDEV_INFO_
 	PPVRSRV_KERNEL_MEM_INFO		psKernelHWPerfCBMemInfo;		/*!< Meminfo for hardware performace circular buffer */
 	PPVRSRV_KERNEL_MEM_INFO		psKernelTASigBufferMemInfo;		/*!< Meminfo for TA signature buffer */
 	PPVRSRV_KERNEL_MEM_INFO		psKernel3DSigBufferMemInfo;		/*!< Meminfo for 3D signature buffer */
-#if defined(FIX_HW_BRN_29702)
-	PPVRSRV_KERNEL_MEM_INFO psKernelCFIMemInfo;	/*!< Meminfo for cfi */
-#endif
-#if defined(FIX_HW_BRN_29823)
-	PPVRSRV_KERNEL_MEM_INFO	psKernelDummyTermStreamMemInfo; /*!< Meminfo for dummy terminate stream */
-#endif
 #if defined(SGX_FEATURE_VDM_CONTEXT_SWITCH) && defined(FIX_HW_BRN_31559)
 	PPVRSRV_KERNEL_MEM_INFO	psKernelVDMSnapShotBufferMemInfo; /*!< Meminfo for dummy snapshot buffer */
 	PPVRSRV_KERNEL_MEM_INFO	psKernelVDMCtrlStreamBufferMemInfo; /*!< Meminfo for dummy control stream */
@@ -386,12 +379,6 @@ typedef struct _SGX_BRIDGE_INIT_INFO_KM_
 	IMG_HANDLE	hKernelTASigBufferMemInfo;
 	IMG_HANDLE	hKernel3DSigBufferMemInfo;
 
-#if defined(FIX_HW_BRN_29702)
-	IMG_HANDLE	hKernelCFIMemInfo;
-#endif
-#if defined(FIX_HW_BRN_29823)
-	IMG_HANDLE	hKernelDummyTermStreamMemInfo;
-#endif
 #if defined(PVRSRV_USSE_EDM_STATUS_DEBUG)
 	IMG_HANDLE	hKernelEDMStatusBufferMemInfo;
 #endif

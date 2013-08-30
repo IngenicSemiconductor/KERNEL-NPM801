@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #if !defined (__SERVICESINT_H__)
@@ -50,7 +49,6 @@ extern "C" {
 
 #include "services.h"
 #include "sysinfo.h"
-#include "sysconfig.h"
 
 #define HWREC_DEFAULT_TIMEOUT	(500)
 
@@ -133,15 +131,15 @@ typedef struct _PVRSRV_KERNEL_MEM_INFO_
 	/* ptr to associated kernel sync info - NULL if no sync */
 	struct _PVRSRV_KERNEL_SYNC_INFO_	*psKernelSyncInfo;
 
+	IMG_HANDLE				hIonSyncInfo;
+
 	PVRSRV_MEMTYPE				memType;
 
     /*
       To activate the "share mem workaround", add PVRSRV_MEM_XPROC to
       the flags for the allocation.  This will cause the "map" API to
       call use Alloc Device Mem but will share the underlying memory
-      block and sync data.  Note that this is a workaround for a bug
-      exposed by a specific use-case on a particular platform.  Do not
-      use this functionality generally.
+      block and sync data.
     */
 	struct {
         /* Record whether the workaround is active for this
@@ -286,10 +284,10 @@ typedef struct _PVRSRV_QUEUE_INFO_
 	IMG_VOID			*pvLinQueueUM;			/*!< Pointer to the command buffer in the user's
 												 address space */
 
-	volatile IMG_SIZE_T	ui32ReadOffset;			/*!< Index into the buffer at which commands are being
+	volatile IMG_SIZE_T	uReadOffset;			/*!< Index into the buffer at which commands are being
 													 consumed */
 
-	volatile IMG_SIZE_T	ui32WriteOffset;		/*!< Index into the buffer at which commands are being
+	volatile IMG_SIZE_T	uWriteOffset;			/*!< Index into the buffer at which commands are being
 													 added */
 
 	IMG_UINT32			*pui32KickerAddrKM;		/*!< kicker address in the kernel's
@@ -298,7 +296,7 @@ typedef struct _PVRSRV_QUEUE_INFO_
 	IMG_UINT32			*pui32KickerAddrUM;		/*!< kicker address in the user's
 												 address space */
 
-	IMG_SIZE_T			ui32QueueSize;			/*!< Size in bytes of the buffer - excluding the safety allocation */
+	IMG_SIZE_T			uQueueSize;				/*!< Size in bytes of the buffer - excluding the safety allocation */
 
 	IMG_UINT32			ui32ProcessID;			/*!< Process ID required by resource locking */
 
@@ -432,11 +430,7 @@ typedef struct PVRSRV_DEVICECLASS_BUFFER_TAG
 */
 typedef struct PVRSRV_CLIENT_DEVICECLASS_INFO_TAG
 {
-#if defined (SUPPORT_SID_INTERFACE)
-	IMG_SID     hDeviceKM;
-#else
 	IMG_HANDLE hDeviceKM;
-#endif
 	IMG_HANDLE	hServices;
 } PVRSRV_CLIENT_DEVICECLASS_INFO;
 
@@ -480,7 +474,7 @@ PVRSRV_ERROR PVRSRVQueueCommand(IMG_HANDLE hQueueInfo,
 IMG_IMPORT PVRSRV_ERROR IMG_CALLCONV
 PVRSRVAllocSharedSysMem(const PVRSRV_CONNECTION *psConnection,
 						IMG_UINT32 ui32Flags,
-						IMG_SIZE_T ui32Size,
+						IMG_SIZE_T uSize,
 						PVRSRV_CLIENT_MEM_INFO **ppsClientMemInfo);
 
 /*!
@@ -536,11 +530,7 @@ PVRSRVUnrefSharedSysMem(const PVRSRV_CONNECTION *psConnection,
  ********************************************************************************/
 IMG_IMPORT PVRSRV_ERROR IMG_CALLCONV
 PVRSRVMapMemInfoMem(const PVRSRV_CONNECTION *psConnection,
-#if defined (SUPPORT_SID_INTERFACE)
-                    IMG_SID hKernelMemInfo,
-#else
                     IMG_HANDLE hKernelMemInfo,
-#endif
                     PVRSRV_CLIENT_MEM_INFO **ppsClientMemInfo);
 
 

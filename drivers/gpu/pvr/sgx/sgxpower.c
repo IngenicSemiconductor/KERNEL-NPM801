@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include <stddef.h>
@@ -541,6 +540,18 @@ PVRSRV_ERROR SGXPreClockSpeedChange (IMG_HANDLE				hDevHandle,
 				PDUMPRESUME();
 				return eError;
 			}
+		}
+		else
+		{
+			#if defined(SUPPORT_HW_RECOVERY)
+			PVRSRV_ERROR	eError;
+
+			eError = OSDisableTimer(psDevInfo->hTimer);
+			if (eError != PVRSRV_OK)
+			{
+				PVR_DPF((PVR_DBG_ERROR,"SGXStartTimer : Failed to enable host timer"));
+			}
+			#endif /* SUPPORT_HW_RECOVERY */
 		}
 	}
 

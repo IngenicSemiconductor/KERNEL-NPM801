@@ -39,7 +39,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #if !defined (__SERVICESEXT_H__)
@@ -745,17 +744,10 @@ typedef struct _PVRSRV_CLIENT_SYNC_INFO_
 	IMG_DEV_VIRTADDR		sReadOps2CompleteDevVAddr;
 
 	/* handle to client mapping data (OS specific) */
-#if defined (SUPPORT_SID_INTERFACE)
-	IMG_SID					hMappingInfo;
-
-	/* handle to kernel sync info */
-	IMG_SID					hKernelSyncInfo;
-#else
 	IMG_HANDLE					hMappingInfo;
 
 	/* handle to kernel sync info */
 	IMG_HANDLE					hKernelSyncInfo;
-#endif
 
 } PVRSRV_CLIENT_SYNC_INFO, *PPVRSRV_CLIENT_SYNC_INFO;
 
@@ -804,7 +796,7 @@ typedef struct _IMG_RECT_16_
 typedef PVRSRV_ERROR (*PFN_GET_BUFFER_ADDR)(IMG_HANDLE,
 											IMG_HANDLE,
 											IMG_SYS_PHYADDR**,
-											IMG_SIZE_T*,
+											IMG_UINT32*,
 											IMG_VOID**,
 											IMG_HANDLE*,
 											IMG_BOOL*,

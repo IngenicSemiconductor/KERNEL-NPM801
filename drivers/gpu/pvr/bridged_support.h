@@ -40,7 +40,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef __BRIDGED_SUPPORT_H__
@@ -56,11 +55,7 @@ extern "C" {
  * Derive the internal OS specific memory handle from a secure
  * handle.
  */
-#if defined (SUPPORT_SID_INTERFACE)
-PVRSRV_ERROR PVRSRVLookupOSMemHandle(PVRSRV_HANDLE_BASE *psBase, IMG_HANDLE *phOSMemHandle, IMG_SID hMHandle);
-#else
 PVRSRV_ERROR PVRSRVLookupOSMemHandle(PVRSRV_HANDLE_BASE *psBase, IMG_HANDLE *phOSMemHandle, IMG_HANDLE hMHandle);
-#endif
 
 #if defined (__cplusplus)
 }

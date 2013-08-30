@@ -37,16 +37,19 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #if defined (TTRACE)
 
 #include "services_headers.h"
 #include "ttrace.h"
 
+#if defined(PVRSRV_NEED_PVR_DPF)
 #define CHECKSIZE(n,m) \
 	if ((n & m) != n) \
-		PVR_DPF((PVR_DBG_ERROR,"Size check failed for " #m)) \
+		PVR_DPF((PVR_DBG_ERROR,"Size check failed for " #m))
+#else
+#define CHECKSIZE(n,m)
+#endif
 
 #define TIME_TRACE_HASH_TABLE_SIZE	32
 
@@ -120,7 +123,7 @@ PVRSRVTimeTraceAllocItem(IMG_UINT32 **pui32Item, IMG_UINT32 ui32Size)
 	{
 		PVRSRV_ERROR eError;
 
-		PVR_DPF((PVR_DBG_MESSAGE, "PVRSRVTimeTraceAllocItem: Creating buffer for PID %u", (IMG_UINT32) ui32PID));
+		PVR_DPF((PVR_DBG_MESSAGE, "PVRSRVTimeTraceAllocItem: Creating buffer for PID %u", ui32PID));
 		eError = PVRSRVTimeTraceBufferCreate(ui32PID);
 		if (eError != PVRSRV_OK)
 		{
@@ -168,7 +171,7 @@ PVRSRVTimeTraceAllocItem(IMG_UINT32 **pui32Item, IMG_UINT32 ui32Size)
 	psBuffer->ui32Woff = psBuffer->ui32Woff + ui32Size;
 	psBuffer->ui32ByteCount += ui32Size;
 
-	/* This allocation will start overwritting past our read pointer, move the read pointer along */
+	/* This allocation will start overwriting past our read pointer, move the read pointer along */
 	while (psBuffer->ui32ByteCount > TIME_TRACE_BUFFER_SIZE)
 	{
 		IMG_UINT32 *psReadItem = (IMG_UINT32 *) &psBuffer->ui8Data[psBuffer->ui32Roff];

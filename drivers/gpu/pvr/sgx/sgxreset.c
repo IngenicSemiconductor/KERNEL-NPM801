@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include "sgxdefs.h"
@@ -192,7 +191,7 @@ static IMG_VOID SGXResetSetupBIFContexts(PVRSRV_SGXDEV_INFO	*psDevInfo,
 		ui32EDMDirListReg = EUR_CR_BIF_DIR_LIST_BASE1 + 4 * (SGX_BIF_DIR_LIST_INDEX_EDM - 1);
 		#endif /* SGX_BIF_DIR_LIST_INDEX_EDM */
 
-		ui32RegVal = psDevInfo->sKernelPDDevPAddr.uiAddr >> SGX_MMU_PDE_ADDR_ALIGNSHIFT;
+		ui32RegVal = (IMG_UINT32)(psDevInfo->sKernelPDDevPAddr.uiAddr >> SGX_MMU_PDE_ADDR_ALIGNSHIFT);
 		
 #if defined(FIX_HW_BRN_28011)
 		OSWriteHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_DIR_LIST_BASE0, ui32RegVal);
@@ -507,6 +506,16 @@ IMG_VOID SGXReset(PVRSRV_SGXDEV_INFO	*psDevInfo,
 	/* enable 36bit addressing mode if the MMU supports it*/
 	OSWriteHWReg(psDevInfo->pvRegsBaseKM, EUR_CR_BIF_36BIT_ADDRESSING, EUR_CR_BIF_36BIT_ADDRESSING_ENABLE_MASK);
 	PDUMPREGWITHFLAGS(SGX_PDUMPREG_NAME, EUR_CR_BIF_36BIT_ADDRESSING, EUR_CR_BIF_36BIT_ADDRESSING_ENABLE_MASK, ui32PDUMPFlags);
+#else
+	#if defined(EUR_CR_BIF_36BIT_ADDRESSING)
+		OSWriteHWReg(psDevInfo->pvRegsBaseKM, 
+				EUR_CR_BIF_36BIT_ADDRESSING, 
+				0);
+		PDUMPREGWITHFLAGS(SGX_PDUMPREG_NAME, 
+				EUR_CR_BIF_36BIT_ADDRESSING, 
+				0, 
+				ui32PDUMPFlags);
+	#endif
 #endif
 
 	SGXResetInitBIFContexts(psDevInfo, ui32PDUMPFlags);
@@ -590,11 +599,11 @@ IMG_VOID SGXReset(PVRSRV_SGXDEV_INFO	*psDevInfo,
 			SGXResetSoftReset(psDevInfo, IMG_TRUE, ui32PDUMPFlags, IMG_FALSE);
 
 			/* Map in the dummy page. */
-			psDevInfo->pui32BIFResetPD[ui32PDIndex] = (psDevInfo->sBIFResetPTDevPAddr.uiAddr
+			psDevInfo->pui32BIFResetPD[ui32PDIndex] = (IMG_UINT32)(psDevInfo->sBIFResetPTDevPAddr.uiAddr
 													>>SGX_MMU_PDE_ADDR_ALIGNSHIFT)
 													| SGX_MMU_PDE_PAGE_SIZE_4K
 													| SGX_MMU_PDE_VALID;
-			psDevInfo->pui32BIFResetPT[ui32PTIndex] = (psDevInfo->sBIFResetPageDevPAddr.uiAddr
+			psDevInfo->pui32BIFResetPT[ui32PTIndex] = (IMG_UINT32)(psDevInfo->sBIFResetPageDevPAddr.uiAddr
 													>>SGX_MMU_PTE_ADDR_ALIGNSHIFT)
 													| SGX_MMU_PTE_VALID;
 

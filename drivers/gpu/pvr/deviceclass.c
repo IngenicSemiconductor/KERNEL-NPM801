@@ -1,4 +1,5 @@
 /*************************************************************************/ /*!
+@File
 @Title          Device class services functions
 @Copyright      Copyright (c) Imagination Technologies Ltd. All Rights Reserved
 @Description    Kernel services functions for device class devices
@@ -38,7 +39,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #include "services_headers.h"
@@ -1426,7 +1426,7 @@ PVRSRV_ERROR PVRSRVCreateDCSwapChainKM (PVRSRV_PER_PROCESS_DATA	*psPerProc,
 	psSwapChain->ui32RefCount = 1;
 	psSwapChain->ui32Flags = ui32Flags;
 
-	/* Save pointer in DC structure if ti's shared struct */
+	/* Save pointer in DC structure if it's shared struct */
 	if( ui32Flags & PVRSRV_CREATE_SWAPCHAIN_SHARED )
 	{
    		if(! psDCInfo->psDCSwapChainShared ) 
@@ -1607,32 +1607,6 @@ PVRSRV_ERROR PVRSRVGetDCBuffersKM(IMG_HANDLE	hDeviceKM,
 		psSwapChain->asBuffer[i].sDeviceClassBuffer.hExtBuffer = ahExtBuffer[i];
 		phBuffer[i] = (IMG_HANDLE)&psSwapChain->asBuffer[i];
 	}
-
-#if defined(SUPPORT_GET_DC_BUFFERS_SYS_PHYADDRS)
-	for(i = 0; i < *pui32BufferCount; i++)
-	{
-		IMG_UINT32 ui32ByteSize, ui32TilingStride;
-		IMG_SYS_PHYADDR *pPhyAddr;
-		IMG_BOOL bIsContiguous;
-		IMG_HANDLE hOSMapInfo;
-		IMG_VOID *pvVAddr;
-
-		eError = psDCInfo->psFuncTable->pfnGetBufferAddr(psDCInfo->hExtDevice,
-														 ahExtBuffer[i],
-														 &pPhyAddr,
-														 &ui32ByteSize,
-														 &pvVAddr,
-														 &hOSMapInfo,
-														 &bIsContiguous,
-														 &ui32TilingStride);
-		if(eError != PVRSRV_OK)
-		{
-			break;
-		}
-
-		psPhyAddr[i] = *pPhyAddr;
-	}
-#endif /* defined(SUPPORT_GET_DC_BUFFERS_SYS_PHYADDRS) */
 
 	return eError;
 }
@@ -2115,6 +2089,15 @@ PVRSRV_ERROR PVRSRVSwapToDCSystemKM(IMG_HANDLE	hDeviceKM,
 	psDCInfo = DCDeviceHandleToDCInfo(hDeviceKM);
 	psSwapChainRef = (PVRSRV_DC_SWAPCHAIN_REF*)hSwapChainRef;
 	psSwapChain = psSwapChainRef->psSwapChain;
+
+	/*
+		If more than 1 reference to the swapchain exists then
+		ignore any request to swap to the system buffer
+	*/
+	if (psSwapChain->ui32RefCount > 1)
+	{
+		return PVRSRV_OK;
+	}
 
 	/* get the queue from the buffer structure */
 	psQueue = psSwapChain->psQueue;

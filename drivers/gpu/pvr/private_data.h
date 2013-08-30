@@ -37,7 +37,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef __INCLUDED_PRIVATE_DATA_H_
@@ -65,11 +64,7 @@ typedef struct
 	IMG_UINT32 ui32OpenPID;
 
 	/* Global kernel MemInfo handle */
-#if defined (SUPPORT_SID_INTERFACE)
-	IMG_SID hKernelMemInfo;
-#else
 	IMG_HANDLE hKernelMemInfo;
-#endif
 
 #if defined(SUPPORT_DRI_DRM) && defined(PVR_SECURE_DRM_AUTH_EXPORT)
 	/* The private data is on a list in the per-process data structure */

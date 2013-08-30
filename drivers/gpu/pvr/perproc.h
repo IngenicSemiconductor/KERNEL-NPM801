@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 #ifndef __PERPROC_H__
 #define __PERPROC_H__
@@ -57,21 +56,12 @@ typedef struct _PVRSRV_PER_PROCESS_DATA_
 	IMG_UINT32		ui32PID;
 	IMG_HANDLE		hBlockAlloc;
 	PRESMAN_CONTEXT 	hResManContext;
-#if defined (SUPPORT_SID_INTERFACE)
-	IMG_SID			hPerProcData;
-#else
 	IMG_HANDLE		hPerProcData;
-#endif
 	PVRSRV_HANDLE_BASE 	*psHandleBase;
-#if defined (SUPPORT_SID_INTERFACE)
-	/* Handles are being allocated in batches */
-	IMG_BOOL		bHandlesBatched;
-#else
 #if defined (PVR_SECURE_HANDLES)
 	/* Handles are being allocated in batches */
 	IMG_BOOL		bHandlesBatched;
 #endif  /* PVR_SECURE_HANDLES */
-#endif /* SUPPORT_SID_INTERFACE */
 	IMG_UINT32		ui32RefCount;
 
 	/* True if the process is the initialisation server. */

@@ -38,7 +38,6 @@ PURPOSE AND NONINFRINGEMENT; AND (B) IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
 */ /**************************************************************************/
 
 #ifndef __SGXAPI_KM_H__
@@ -84,11 +83,8 @@ extern "C" {
 #if defined(SUPPORT_MEMORY_TILING)
 #define SGX_VPB_TILED_HEAP_ID			14
 #endif
-#if defined(SUPPORT_ION)
-#define SGX_ION_HEAP_ID							15
-#endif
 
-#define SGX_MAX_HEAP_ID							16
+#define SGX_MAX_HEAP_ID							15
 
 /*
  * Keep SGX_3DPARAMETERS_HEAP_ID as TQ full custom
@@ -237,6 +233,7 @@ typedef struct _CTL_STATUS_
 typedef enum _SGX_MISC_INFO_REQUEST_
 {
 	SGX_MISC_INFO_REQUEST_CLOCKSPEED = 0,
+	SGX_MISC_INFO_REQUEST_CLOCKSPEED_SLCSIZE,
 	SGX_MISC_INFO_REQUEST_SGXREV,
 	SGX_MISC_INFO_REQUEST_DRIVER_SGXREV,
 #if defined(SUPPORT_SGX_EDM_MEMORY_DEBUG)
@@ -255,6 +252,9 @@ typedef enum _SGX_MISC_INFO_REQUEST_
 	SGX_MISC_INFO_REQUEST_SPM,
 	SGX_MISC_INFO_REQUEST_ACTIVEPOWER,
 	SGX_MISC_INFO_REQUEST_LOCKUPS,
+#if defined(PVRSRV_USSE_EDM_STATUS_DEBUG)
+	SGX_MISC_INFO_REQUEST_EDM_STATUS_BUFFER_INFO,
+#endif
 	SGX_MISC_INFO_REQUEST_FORCE_I16 				=  0x7fff
 } SGX_MISC_INFO_REQUEST;
 
@@ -276,11 +276,24 @@ typedef struct _PVRSRV_SGX_MISCINFO_FEATURES
 #if defined(SUPPORT_SGX_EDM_MEMORY_DEBUG)
 	IMG_UINT32			ui32DeviceMemValue;		/*!< device mem value read from ukernel */
 #endif
+} PVRSRV_SGX_MISCINFO_FEATURES;
+
+typedef struct _PVRSRV_SGX_MISCINFO_QUERY_CLOCKSPEED_SLCSIZE
+{
+	IMG_UINT32                      ui32SGXClockSpeed;
+	IMG_UINT32                      ui32SGXSLCSize;
+} PVRSRV_SGX_MISCINFO_QUERY_CLOCKSPEED_SLCSIZE;
+
 #if defined(PVRSRV_USSE_EDM_STATUS_DEBUG)
+/******************************************************************************
+ * Struct for getting access to the EDM Status Buffer
+ ******************************************************************************/
+typedef struct _PVRSRV_SGX_MISCINFO_EDM_STATUS_BUFFER_INFO
+{
 	IMG_DEV_VIRTADDR	sDevVAEDMStatusBuffer;	/*!< DevVAddr of the EDM status buffer */
 	IMG_PVOID			pvEDMStatusBuffer;		/*!< CPUVAddr of the EDM status buffer */
+} PVRSRV_SGX_MISCINFO_EDM_STATUS_BUFFER_INFO;
 #endif
-} PVRSRV_SGX_MISCINFO_FEATURES;
 
 
 /******************************************************************************
@@ -390,6 +403,7 @@ typedef struct _SGX_MISC_INFO_
 		IMG_UINT32	reserved;	/*!< Unused: ensures valid code in the case everything else is compiled out */
 		PVRSRV_SGX_MISCINFO_FEATURES						sSGXFeatures;
 		IMG_UINT32											ui32SGXClockSpeed;
+		PVRSRV_SGX_MISCINFO_QUERY_CLOCKSPEED_SLCSIZE				sQueryClockSpeedSLCSize;
 		PVRSRV_SGX_MISCINFO_ACTIVEPOWER						sActivePower;
 		PVRSRV_SGX_MISCINFO_LOCKUPS							sLockups;
 		PVRSRV_SGX_MISCINFO_SPM								sSPM;
@@ -397,6 +411,10 @@ typedef struct _SGX_MISC_INFO_
 		SGX_BREAKPOINT_INFO									sSGXBreakpointInfo;
 #endif
 		PVRSRV_SGX_MISCINFO_SET_HWPERF_STATUS				sSetHWPerfStatus;
+
+#if defined(PVRSRV_USSE_EDM_STATUS_DEBUG)
+		PVRSRV_SGX_MISCINFO_EDM_STATUS_BUFFER_INFO			sEDMStatusBufferInfo;
+#endif
 	} uData;
 } SGX_MISC_INFO;
 
@@ -440,7 +458,6 @@ typedef struct _PVRSRV_SGX_PDUMP_CONTEXT_
 } PVRSRV_SGX_PDUMP_CONTEXT;
 
 
-#if !defined (SUPPORT_SID_INTERFACE)
 typedef struct _SGX_KICKTA_DUMP_ROFF_
 {
 	IMG_HANDLE			hKernelMemInfo;						/*< Buffer handle */
@@ -449,13 +466,8 @@ typedef struct _SGX_KICKTA_DUMP_ROFF_
 	IMG_UINT32			ui32Value;							/*< Actual value to dump */
 	IMG_PCHAR			pszName;							/*< Name of buffer */
 } SGX_KICKTA_DUMP_ROFF, *PSGX_KICKTA_DUMP_ROFF;
-#endif
 
-#if defined (SUPPORT_SID_INTERFACE)
-typedef struct _SGX_KICKTA_DUMP_BUFFER_KM_
-#else
 typedef struct _SGX_KICKTA_DUMP_BUFFER_
-#endif
 {
 	IMG_UINT32			ui32SpaceUsed;
 	IMG_UINT32			ui32Start;							/*< Byte offset of start to dump */
@@ -476,13 +488,8 @@ typedef struct _SGX_KICKTA_DUMP_BUFFER_
 #if defined (__QNXNTO__)
 	IMG_UINT32          ui32NameLength;                     /*< Number of characters in buffer name */
 #endif
-#if defined (SUPPORT_SID_INTERFACE)
-} SGX_KICKTA_DUMP_BUFFER_KM, *PSGX_KICKTA_DUMP_BUFFER_KM;
-#else
 } SGX_KICKTA_DUMP_BUFFER, *PSGX_KICKTA_DUMP_BUFFER;
-#endif
 
-#if !defined (SUPPORT_SID_INTERFACE)
 #ifdef PDUMP
 /*
 	PDUMP version of above kick structure
@@ -502,7 +509,6 @@ typedef struct _SGX_KICKTA_PDUMP_
 	IMG_UINT32						ui32ROffArraySize;
 } SGX_KICKTA_PDUMP, *PSGX_KICKTA_PDUMP;
 #endif	/* PDUMP */
-#endif /* #if !defined (SUPPORT_SID_INTERFACE) */
 
 #if defined(TRANSFER_QUEUE)
 #if defined(SGX_FEATURE_2D_HARDWARE)
