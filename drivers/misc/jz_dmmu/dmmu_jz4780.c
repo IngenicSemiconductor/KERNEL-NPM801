@@ -210,6 +210,9 @@ static int fill_tlb_address(void *page_base, struct dmmu_mem_info *mem,
 	mem->end_offset = ((unsigned int)mem->vaddr + mem->size) - (unsigned int)end;
 
 	s_pos = tlb_pos;
+
+	if (page_num <= 0)
+		return -EINVAL;
  
 	for (i=0; i < page_num; i++) {
 		int *p_tlb;
